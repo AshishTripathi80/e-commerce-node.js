@@ -1,1 +1,4 @@
 authentication-service/node_modules
+authentication-service/.env
+product-service/node_modules
+product-service/.env

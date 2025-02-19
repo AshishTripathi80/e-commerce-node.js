@@ -1,50 +1,43 @@
-import mongoose, { Schema } from "mongoose";
-import bcrypt from "bcryptjs";
+import mongoose, { Schema, Document } from 'mongoose';  
+import bcrypt from 'bcryptjs';  
 
-const userSchema = new Schema({
-  name: {
-    type: String,
-    required: [true, "name is requied"],
-    trim: true,
-    maxLength: [50, "name can not exceed 50 characters"],
-  },
+// Define user interface  
+export interface User extends Document {  
+    name: string;  
+    email: string;  
+    password: string;  
+    role: "user" | "admin";  
+    comparePassword(password: string): Promise<boolean>;  
+    createdAt: Date;  
+}  
 
-  email:{
-    type:String,
-    required: [true, "Email is requied"],
-    unique:true,
-    trim: true,
-    match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email address']  
-  },
+// Define user schema  
+const UserSchema = new Schema({  
+    name: { type: String, required: true },  
+    email: { type: String, required: true, unique: true },  
+    password: { type: String, required: true },  
+    role: { type: String, default: "user" },  
+    createdAt: { type: Date, default: Date.now }  
+}, {  
+    collection: 'users'  
+});  
 
-  password:{
-    type:String,
-    required:[true,'Password is required'],
-    minLength:[5,'Password must be altleast 5 characters'],
-    private:true
-  },
-  role:{
-    type:String,
-    enum:['user','admin'],
-    default:'user'
-  },
-  createdAt:{
-    type:Date,
-    default:Date.now
-  }
-});
+// Method to compare password  
+UserSchema.methods.comparePassword = async function (password: string): Promise<boolean> {  
+    const user = this as User;  
+    return bcrypt.compare(password, user.password);  
+};  
 
-// pre save hook for password hashing
+// Pre-save hook for password hashing  
+UserSchema.pre('save', async function (this: User, next) {  
+    if (this.isModified('password')) {  
+        const salt = await bcrypt.genSalt(12); // Increased salt rounds for better security  
+        this.password = await bcrypt.hash(this.password, salt);  
+    }  
+    next();  
+});  
 
-userSchema.pre('save',async function (next) {
-    const salt=await bcrypt.genSalt(10);
-    this.password= await bcrypt.hash(this.password,salt);
-    next();    
-});
+// Create model  
+const UserModel = mongoose.model<User>('User', UserSchema);  
 
-// method to compare passwords
-userSchema.methods.comparePassword= async function (candidatePassword:string) {
-    return await bcrypt.compare(candidatePassword,this.password);
-}
-
-export const User =mongoose.model('User',userSchema);
+export { UserSchema, UserModel as User };
