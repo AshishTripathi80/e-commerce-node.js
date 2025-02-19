@@ -5,6 +5,7 @@ import Product from '../models/product.model';
 export const createProduct=async (req:Request,res:Response)=>{
     try{
         const product=new Product(req.body);
+        console.log(product)
         await product.save();
         res.status(201).json(product);
     }catch(error){
@@ -13,7 +14,7 @@ export const createProduct=async (req:Request,res:Response)=>{
 }
 
 //get app product
-export const getAllProduct= async(req:Request,res:Response)=>{
+export const getAllProducts= async(req:Request,res:Response)=>{
     try{
         const products=await Product.find();
         res.status(200).json(products)
@@ -26,7 +27,7 @@ export const getAllProduct= async(req:Request,res:Response)=>{
 //get product by id
 export const getProductById= async(req:Request,res:Response)=>{
     try{
-        const productId= req.params;
+        const productId= req.params.productId;
         const product=await Product.findById(productId);
         if (!product) {  
             res.status(404).json({ message: 'Product not found' });  

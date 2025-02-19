@@ -1,12 +1,19 @@
 import express from 'express';  
 import mongoose from 'mongoose';
 import 'dotenv/config'
+import cors from 'cors'; 
+import productRoutes from './routes/product.routes';  
+import { authenticate } from './middleware/auth';
 
 const app = express();  
 
 // Middleware  
 app.use(express.json());  
 app.use(express.urlencoded({ extended: true }));  
+app.use(cors());  
+
+// Secure routes with JWT authentication  
+app.use('/api/products', authenticate, productRoutes);  
 
 
 // MongoDB connection  
